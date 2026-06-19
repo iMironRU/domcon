@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Phone, Send, MapPin, ArrowLeft, ChevronLeft, ChevronRight, X, Maximize2, Check } from "lucide-react";
+import { Phone, Send, MapPin, ArrowLeft, ChevronLeft, ChevronRight, X, Maximize2, Check, Share2 } from "lucide-react";
 import type { RealtyObject, Realtor, Theme } from "../../schema/types";
 import type { ResolvePhoto } from "./resolvePhoto";
 import { PhotoFrame } from "./PhotoFrame";
@@ -30,12 +30,24 @@ export function ObjectPage({ o, realtor, theme: t, resolvePhoto, onBack, backHre
   const move = (d: number) => setIdx((i) => (i + d + o.photos.length) % o.photos.length);
 
   const Back = backHref
-    ? <a href={backHref} style={{ display: "flex", alignItems: "center", gap: 6, color: t.muted, fontSize: 14, marginBottom: t.unit, textDecoration: "none" }}><ArrowLeft size={18} /> Все объекты</a>
-    : <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, color: t.muted, fontSize: 14, marginBottom: t.unit }}><ArrowLeft size={18} /> Все объекты</button>;
+    ? <a href={backHref} style={{ display: "flex", alignItems: "center", gap: 6, color: t.muted, fontSize: 14, textDecoration: "none" }}><ArrowLeft size={18} /> Все объекты</a>
+    : <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, color: t.muted, fontSize: 14 }}><ArrowLeft size={18} /> Все объекты</button>;
+
+  // share.js (на статике) делегированно ловит клики по [data-share].
+  // В Mini App превью кнопка тоже рендерится, но share.js не подключён —
+  // showContacts=false и так уже даёт понять «это превью», игнорим.
+  const ShareBtn = (
+    <button data-share style={{ display: "flex", alignItems: "center", gap: 6, color: t.muted, fontSize: 14, background: "transparent", border: `1px solid ${t.border}`, borderRadius: 999, padding: "4px 12px", cursor: "pointer" }}>
+      <Share2 size={14} /> Поделиться
+    </button>
+  );
 
   return (
     <div style={{ fontFamily: t.body, color: t.ink, paddingBottom: showContacts ? 88 : 0 }}>
-      {Back}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: t.unit }}>
+        <div style={{ marginBottom: 0 }}>{Back}</div>
+        {ShareBtn}
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: t.unit }}>
         <div>
           <PhotoFrame src={has ? photo(idx) : ""} alt={o.title} theme={t}

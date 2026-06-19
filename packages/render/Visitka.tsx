@@ -1,4 +1,4 @@
-import { Phone, Send, MessageCircle } from "lucide-react";
+import { Phone, Send, MessageCircle, UserPlus, Share2 } from "lucide-react";
 import type { Realtor, Theme } from "../../schema/types";
 import type { ResolvePhoto } from "./resolvePhoto";
 import { PhotoFrame } from "./PhotoFrame";
@@ -45,6 +45,23 @@ export function Visitka({ realtor: r, theme: t, resolvePhoto }: Props) {
         {btn(`tel:${r.phone}`, Phone, "Звонок", false)}
         {r.telegram && btn(`https://t.me/${r.telegram}`, Send, "Telegram", true)}
         {r.whatsapp && btn(`https://wa.me/${r.whatsapp}`, MessageCircle, "WhatsApp", false)}
+      </div>
+      {/* vCard и share — обрабатывает share.js на статике (делегированно через data-*) */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <button data-vcard
+          data-name={r.name}
+          data-tel={r.phone}
+          data-org="domcon"
+          data-note={r.tagline ?? ""}
+          data-telegram={r.telegram ?? ""}
+          data-whatsapp={r.whatsapp ?? ""}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: t.radius, padding: "10px 14px", fontSize: 14, fontWeight: 600, background: t.surface, color: t.ink, border: `1px solid ${t.border}`, cursor: "pointer" }}>
+          <UserPlus size={17} /> В контакты
+        </button>
+        <button data-share
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: t.radius, padding: "10px 14px", fontSize: 14, fontWeight: 600, background: t.surface, color: t.ink, border: `1px solid ${t.border}`, cursor: "pointer" }}>
+          <Share2 size={17} /> Поделиться
+        </button>
       </div>
     </div>
   );

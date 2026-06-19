@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ObjectPage, makeResolvePhoto } from "@domcon/render";
+import qrcode from "qrcode-generator";
 import type { RealtyObject, Realtor, Theme, ObjectType, Mortgage } from "../../../schema/types";
 import { detectLaunch } from "./verifyLaunch";
 import { compressPhoto, type CompressedPhoto } from "./compressPhoto";
@@ -195,6 +196,58 @@ function Center({ children }: { children: React.ReactNode }) {
   return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", textAlign: "center", gap: 10, padding: 24, fontFamily: "system-ui" }}>{children}</div>;
 }
 
+/** CSS-спиннер. Один div + keyframes — без gif'а. */
+function Spinner({ size = 56, color = "#1f5132" }: { size?: number; color?: string }) {
+  return (
+    <>
+      <style>{`@keyframes domcon-spin{to{transform:rotate(360deg)}}`}</style>
+      <div style={{ width: size, height: size, border: `4px solid #e5e7eb`, borderTopColor: color, borderRadius: "50%", animation: "domcon-spin .9s linear infinite" }} />
+    </>
+  );
+}
+
+/** Модалка «Поделиться»: copy + native share + Telegram share + QR. Внутри React. */
+function ShareModal({ url, accent, onClose }: { url: string; accent: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const qrSvg = useMemo(() => {
+    const qr = qrcode(0, "M");
+    qr.addData(url);
+    qr.make();
+    return qr.createSvgTag({ scalable: true, margin: 2 });
+  }, [url]);
+  const TG = (window as any).Telegram?.WebApp;
+
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(8,10,12,.78)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", color: "#16201a", borderRadius: 18, padding: 24, maxWidth: 340, width: "100%", textAlign: "center" }}>
+        <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Поделиться</div>
+        <div style={{ color: "#666", fontSize: 12, wordBreak: "break-all", marginBottom: 18 }}>{url}</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 18 }} dangerouslySetInnerHTML={{ __html: qrSvg.replace("<svg ", '<svg style="width:180px;height:180px" ') }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <button onClick={async () => {
+            try { await navigator.clipboard.writeText(url); setCopied(true); } catch { /* */ }
+          }} style={{ background: copied ? "#0a8a4f" : accent, color: "#fff", border: "none", borderRadius: 12, padding: 13, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            {copied ? "Скопировано ✓" : "Скопировать ссылку"}
+          </button>
+          {TG && (
+            <button onClick={() => TG.openTelegramLink("https://t.me/share/url?url=" + encodeURIComponent(url))}
+              style={{ background: "#fff", color: "#16201a", border: "1.5px solid #dde2da", borderRadius: 12, padding: 13, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Через Telegram
+            </button>
+          )}
+          {typeof navigator.share === "function" && (
+            <button onClick={() => navigator.share({ url, title: "domcon" }).catch(() => {})}
+              style={{ background: "#fff", color: "#16201a", border: "1.5px solid #dde2da", borderRadius: 12, padding: 13, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+              Системное «поделиться»
+            </button>
+          )}
+          <button onClick={onClose} style={{ background: "transparent", color: "#888", border: "none", padding: 8, fontSize: 13, cursor: "pointer" }}>Закрыть</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Экран «Готово». Поллит URL новой страницы (CI собирает 1–2 мин), пока не
  * увидит 200. Показывает прогресс ожидания. Кнопка «Добавить ещё» сбрасывает
@@ -205,6 +258,7 @@ function Done({ url, accent, onAddAnother }: { url: string; accent: string; onAd
   const [ready, setReady] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [timedOut, setTimedOut] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     let stopped = false;
@@ -230,7 +284,7 @@ function Done({ url, accent, onAddAnother }: { url: string; accent: string; onAd
     <Center>
       {!ready && !timedOut && (
         <>
-          <div style={{ fontSize: 40 }}>⏳</div>
+          <Spinner color={accent} />
           <h2 style={{ margin: 0 }}>Собираем страницу…</h2>
           <p style={{ color: "#666", margin: 0 }}>
             Объект ушёл в репозиторий, GitHub Actions собирает сайт.<br />
@@ -241,10 +295,11 @@ function Done({ url, accent, onAddAnother }: { url: string; accent: string; onAd
       )}
       {ready && (
         <>
-          <div style={{ fontSize: 40 }}>✓</div>
+          <div style={{ fontSize: 40, color: accent }}>✓</div>
           <h2 style={{ margin: 0 }}>Страница готова</h2>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <a href={url} target="_blank" rel="noreferrer" style={accentBtn}>Открыть страницу</a>
+            <button onClick={() => setShareOpen(true)} style={ghostBtn}>Поделиться</button>
             <button onClick={onAddAnother} style={ghostBtn}>Добавить ещё</button>
           </div>
           <a href={url} target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: 12, wordBreak: "break-all" }}>{url}</a>
@@ -259,10 +314,12 @@ function Done({ url, accent, onAddAnother }: { url: string; accent: string; onAd
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
             <a href={url} target="_blank" rel="noreferrer" style={accentBtn}>Открыть страницу</a>
+            <button onClick={() => setShareOpen(true)} style={ghostBtn}>Поделиться</button>
             <button onClick={onAddAnother} style={ghostBtn}>Добавить ещё</button>
           </div>
         </>
       )}
+      {shareOpen && <ShareModal url={url} accent={accent} onClose={() => setShareOpen(false)} />}
     </Center>
   );
 }

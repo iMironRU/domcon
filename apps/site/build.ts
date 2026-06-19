@@ -85,7 +85,7 @@ writeFileSync(join(DIST, "index.html"), shell({
   bodyHtml: listingBody,
   theme,
   base: BASE,
-  scripts: `<script src="${BASE}/filters.js" defer></script>`,
+  scripts: `<script src="${BASE}/qrcode.js" defer></script><script src="${BASE}/share.js" defer></script><script src="${BASE}/filters.js" defer></script>`,
 }));
 
 // ── страницы объектов ───────────────────────────────────────────────────────
@@ -93,7 +93,11 @@ for (const o of objects) {
   const body = render(createElement(ObjectPage, { o, realtor, theme, resolvePhoto, backHref: `${BASE}/`, interactive: false }));
   const dir = join(DIST, "objects", o.id);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "index.html"), shell({ title: `${o.title} — ${fmtTitlePrice(o.price)}`, bodyHtml: body, theme, base: BASE }));
+  writeFileSync(join(dir, "index.html"), shell({
+    title: `${o.title} — ${fmtTitlePrice(o.price)}`,
+    bodyHtml: body, theme, base: BASE,
+    scripts: `<script src="${BASE}/qrcode.js" defer></script><script src="${BASE}/share.js" defer></script>`,
+  }));
 }
 
 // ── objects.json (для фильтров) + статика ───────────────────────────────────
@@ -105,6 +109,9 @@ cpSync(join(import.meta.dirname ?? dirname(fileURLToPath(import.meta.url)), "pub
 // ── ассеты (фото объектов) — git-режим: content/assets → dist/assets ────────
 const ASSETS = join(CONTENT, "assets");
 if (existsSync(ASSETS)) cpSync(ASSETS, join(DIST, "assets"), { recursive: true });
+
+// ── qrcode-generator (для share.js) ────────────────────────────────────────
+cpSync(join(ROOT, "node_modules/qrcode-generator/dist/qrcode.js"), join(DIST, "qrcode.js"));
 
 function fmtTitlePrice(n: number) { return new Intl.NumberFormat("ru-RU").format(n) + " ₽"; }
 
