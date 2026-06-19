@@ -14,10 +14,11 @@ interface Props {
   onBack?: () => void;          // превью/SPA; на статике — ссылка назад через backHref
   backHref?: string;
   interactive?: boolean;        // false на статике (без лайтбокса), true в превью
+  showContacts?: boolean;       // sticky CTA «Позвонить/Написать»; false в превью риелтора
 }
 
 /** Несущий компонент №2. */
-export function ObjectPage({ o, realtor, theme: t, resolvePhoto, onBack, backHref, interactive = true }: Props) {
+export function ObjectPage({ o, realtor, theme: t, resolvePhoto, onBack, backHref, interactive = true, showContacts = true }: Props) {
   const [idx, setIdx] = useState(0);
   const [zoom, setZoom] = useState(false);
   const has = o.photos.length > 0;
@@ -33,7 +34,7 @@ export function ObjectPage({ o, realtor, theme: t, resolvePhoto, onBack, backHre
     : <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, color: t.muted, fontSize: 14, marginBottom: t.unit }}><ArrowLeft size={18} /> Все объекты</button>;
 
   return (
-    <div style={{ fontFamily: t.body, color: t.ink, paddingBottom: 88 }}>
+    <div style={{ fontFamily: t.body, color: t.ink, paddingBottom: showContacts ? 88 : 0 }}>
       {Back}
       <div style={{ display: "flex", flexDirection: "column", gap: t.unit }}>
         <div>
@@ -93,17 +94,19 @@ export function ObjectPage({ o, realtor, theme: t, resolvePhoto, onBack, backHre
         {o.mortgage && <MortgageBlock m={o.mortgage} theme={t} />}
       </div>
 
-      {/* sticky CTA — под большой палец, mobile-first */}
-      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, padding: 12, background: t.surface, borderTop: `1px solid ${t.border}`, zIndex: 30 }}>
-        <div style={{ display: "flex", maxWidth: 920, margin: "0 auto", width: "100%", gap: 10 }}>
-          <a href={`tel:${realtor.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: t.surface, color: t.ink, border: `1.5px solid ${t.accent}`, borderRadius: t.radius, padding: "13px 16px", fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
-            <Phone size={18} /> Позвонить
-          </a>
-          <a href={tg} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: t.accent, color: t.accentInk, borderRadius: t.radius, padding: "13px 16px", fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
-            <Send size={18} /> Написать
-          </a>
+      {/* sticky CTA — под большой палец, mobile-first. Скрыт в превью риелтора. */}
+      {showContacts && (
+        <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, padding: 12, background: t.surface, borderTop: `1px solid ${t.border}`, zIndex: 30 }}>
+          <div style={{ display: "flex", maxWidth: 920, margin: "0 auto", width: "100%", gap: 10 }}>
+            <a href={`tel:${realtor.phone}`} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: t.surface, color: t.ink, border: `1.5px solid ${t.accent}`, borderRadius: t.radius, padding: "13px 16px", fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
+              <Phone size={18} /> Позвонить
+            </a>
+            <a href={tg} target="_blank" rel="noreferrer" style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: t.accent, color: t.accentInk, borderRadius: t.radius, padding: "13px 16px", fontSize: 15, fontWeight: 600, textDecoration: "none" }}>
+              <Send size={18} /> Написать
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
       {interactive && zoom && has && (
         <div style={{ position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(8,10,12,.92)", zIndex: 50 }} onClick={() => setZoom(false)}>

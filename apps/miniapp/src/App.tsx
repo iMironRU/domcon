@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ObjectPage, makeResolvePhoto } from "@domcon/render";
 import type { RealtyObject, Realtor, Theme, ObjectType, Mortgage } from "../../../schema/types";
 import { detectLaunch } from "./verifyLaunch";
@@ -101,13 +101,10 @@ export function App() {
   }
 
   if (doneUrl) {
-    return (
-      <Center>
-        <h2>Объект отправлен ✓</h2>
-        <p style={{ color: "#555" }}>Страница появится через минуту:</p>
-        <a href={doneUrl} target="_blank" rel="noreferrer">{doneUrl}</a>
-      </Center>
-    );
+    return <Done url={doneUrl} accent={DEMO_THEME.accent} onAddAnother={() => {
+      setDoneUrl(null);
+      setD({ type: "квартира", status: "active", features: [], photos: [] });
+    }} />;
   }
 
   return (
@@ -177,10 +174,11 @@ export function App() {
         </button>
       </div>
 
-      {/* живое превью — тот же ObjectPage, что на сайте */}
+      {/* живое превью — тот же ObjectPage, что на сайте. Контакты скрыты:
+          риелтор смотрит сам себя, кнопки «позвонить/написать» нерелевантны. */}
       <div style={{ border: `1px dashed ${DEMO_THEME.border}`, borderRadius: DEMO_THEME.radius, padding: 12, background: DEMO_THEME.bg }}>
         <div style={{ fontSize: 11, color: DEMO_THEME.muted, marginBottom: 8 }}>превью (тот же рендер, что на сайте)</div>
-        <ObjectPage o={previewObj} realtor={DEMO_REALTOR} theme={DEMO_THEME} resolvePhoto={resolvePhoto} interactive />
+        <ObjectPage o={previewObj} realtor={DEMO_REALTOR} theme={DEMO_THEME} resolvePhoto={resolvePhoto} interactive showContacts={false} />
       </div>
     </div>
   );
@@ -195,6 +193,78 @@ function Row({ children }: { children: React.ReactNode }) {
 }
 function Center({ children }: { children: React.ReactNode }) {
   return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", textAlign: "center", gap: 10, padding: 24, fontFamily: "system-ui" }}>{children}</div>;
+}
+
+/**
+ * Экран «Готово». Поллит URL новой страницы (CI собирает 1–2 мин), пока не
+ * увидит 200. Показывает прогресс ожидания. Кнопка «Добавить ещё» сбрасывает
+ * черновик к стартовому. По таймауту (3 мин) — даём ссылку и говорим «должна
+ * быть готова, если нет — обнови».
+ */
+function Done({ url, accent, onAddAnother }: { url: string; accent: string; onAddAnother: () => void; }) {
+  const [ready, setReady] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    let stopped = false;
+    const started = Date.now();
+    const tick = async () => {
+      if (stopped) return;
+      setElapsed(Math.round((Date.now() - started) / 1000));
+      try {
+        const res = await fetch(url, { method: "GET", cache: "no-store" });
+        if (res.ok) { setReady(true); return; }
+      } catch { /* CORS/сеть — повторим */ }
+      if (Date.now() - started > 180_000) { setTimedOut(true); return; }
+      setTimeout(tick, 5000);
+    };
+    tick();
+    return () => { stopped = true; };
+  }, [url]);
+
+  const accentBtn = { background: accent, color: "#fff", border: "none", borderRadius: 12, padding: "13px 22px", fontSize: 15, fontWeight: 600, cursor: "pointer", textDecoration: "none", display: "inline-block" } as const;
+  const ghostBtn = { background: "transparent", color: "#333", border: "1.5px solid #ccc", borderRadius: 12, padding: "13px 22px", fontSize: 15, fontWeight: 600, cursor: "pointer" } as const;
+
+  return (
+    <Center>
+      {!ready && !timedOut && (
+        <>
+          <div style={{ fontSize: 40 }}>⏳</div>
+          <h2 style={{ margin: 0 }}>Собираем страницу…</h2>
+          <p style={{ color: "#666", margin: 0 }}>
+            Объект ушёл в репозиторий, GitHub Actions собирает сайт.<br />
+            Обычно занимает 60–90 секунд. Прошло: {elapsed}с
+          </p>
+          <button onClick={onAddAnother} style={ghostBtn}>Добавить ещё, не дожидаясь</button>
+        </>
+      )}
+      {ready && (
+        <>
+          <div style={{ fontSize: 40 }}>✓</div>
+          <h2 style={{ margin: 0 }}>Страница готова</h2>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <a href={url} target="_blank" rel="noreferrer" style={accentBtn}>Открыть страницу</a>
+            <button onClick={onAddAnother} style={ghostBtn}>Добавить ещё</button>
+          </div>
+          <a href={url} target="_blank" rel="noreferrer" style={{ color: "#888", fontSize: 12, wordBreak: "break-all" }}>{url}</a>
+        </>
+      )}
+      {timedOut && (
+        <>
+          <div style={{ fontSize: 40 }}>🤔</div>
+          <h2 style={{ margin: 0 }}>Дольше обычного</h2>
+          <p style={{ color: "#666", margin: 0 }}>
+            Страница должна быть уже готова. Если нет — попробуйте обновить через минуту.
+          </p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center" }}>
+            <a href={url} target="_blank" rel="noreferrer" style={accentBtn}>Открыть страницу</a>
+            <button onClick={onAddAnother} style={ghostBtn}>Добавить ещё</button>
+          </div>
+        </>
+      )}
+    </Center>
+  );
 }
 
 function stripLocal(d: Draft): Partial<RealtyObject> {
