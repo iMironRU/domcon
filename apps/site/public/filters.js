@@ -6,8 +6,9 @@
   const sortSel = document.querySelector("[data-sort]");
   if (!grid) return;
 
+  const BASE = window.__BASE__ || "";
   let data = [];
-  try { data = await (await fetch("/objects.json")).json(); } catch { return; }
+  try { data = await (await fetch(BASE + "/objects.json")).json(); } catch { return; }
 
   const byId = new Map([...grid.children].map((el) => [el.dataset.id, el]));
   let type = "все";

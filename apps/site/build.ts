@@ -23,14 +23,20 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const CONTENT = join(ROOT, "content");
 const DIST = join(ROOT, "dist");
 
+// Префикс деплоя. На project-Pages (https://user.github.io/<repo>/) нужен /<repo>;
+// на user/org-site или своём домене — пустой. CI задаёт через env, локально пусто.
+const BASE = (process.env.BASE_PATH
+  ?? (process.env.GITHUB_REPOSITORY ? "/" + process.env.GITHUB_REPOSITORY.split("/")[1] : "")
+).replace(/\/$/, "");
+
 const realtor = yaml.load(readFileSync(join(CONTENT, "realtor.yaml"), "utf8")) as Realtor;
 const theme = JSON.parse(readFileSync(join(CONTENT, "theme.json"), "utf8")) as Theme;
 const objects: RealtyObject[] = readdirSync(join(CONTENT, "objects"))
   .filter((f) => f.endsWith(".yaml"))
   .map((f) => yaml.load(readFileSync(join(CONTENT, "objects", f), "utf8")) as RealtyObject);
 
-// git-режим: ассеты лежат под /assets. (R2 → makeResolvePhoto({ r2Base }))
-const resolvePhoto = makeResolvePhoto({ base: "/assets" });
+// git-режим: ассеты лежат под <BASE>/assets. (R2 → makeResolvePhoto({ r2Base }))
+const resolvePhoto = makeResolvePhoto({ base: `${BASE}/assets` });
 
 function render(node: React.ReactElement): string {
   return renderToStaticMarkup(node);
@@ -43,7 +49,7 @@ const ordered = [...active, ...sold];
 
 const cardsHtml = ordered
   .map((o) => `<div data-id="${o.id}">` +
-    render(createElement(PropertyCard, { o, theme, resolvePhoto, href: `/objects/${o.id}/` })) +
+    render(createElement(PropertyCard, { o, theme, resolvePhoto, href: `${BASE}/objects/${o.id}/` })) +
     `</div>`)
   .join("");
 
@@ -78,15 +84,16 @@ writeFileSync(join(DIST, "index.html"), shell({
   title: `${realtor.name} — недвижимость`,
   bodyHtml: listingBody,
   theme,
-  scripts: `<script src="/filters.js" defer></script>`,
+  base: BASE,
+  scripts: `<script src="${BASE}/filters.js" defer></script>`,
 }));
 
 // ── страницы объектов ───────────────────────────────────────────────────────
 for (const o of objects) {
-  const body = render(createElement(ObjectPage, { o, realtor, theme, resolvePhoto, backHref: "/", interactive: false }));
+  const body = render(createElement(ObjectPage, { o, realtor, theme, resolvePhoto, backHref: `${BASE}/`, interactive: false }));
   const dir = join(DIST, "objects", o.id);
   mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, "index.html"), shell({ title: `${o.title} — ${fmtTitlePrice(o.price)}`, bodyHtml: body, theme }));
+  writeFileSync(join(dir, "index.html"), shell({ title: `${o.title} — ${fmtTitlePrice(o.price)}`, bodyHtml: body, theme, base: BASE }));
 }
 
 // ── objects.json (для фильтров) + статика ───────────────────────────────────
@@ -101,4 +108,4 @@ if (existsSync(ASSETS)) cpSync(ASSETS, join(DIST, "assets"), { recursive: true }
 
 function fmtTitlePrice(n: number) { return new Intl.NumberFormat("ru-RU").format(n) + " ₽"; }
 
-console.log(`✓ собрано: ${objects.length} объектов → ${DIST}`);
+console.log(`✓ собрано: ${objects.length} объектов → ${DIST}${BASE ? ` (base="${BASE}")` : ""}`);

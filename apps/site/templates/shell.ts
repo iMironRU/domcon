@@ -10,10 +10,11 @@ export function shell(opts: {
   title: string;
   bodyHtml: string;
   theme: Theme;
+  base?: string;        // префикс деплоя (project-Pages: "/domcon"; root/CNAME: "")
   head?: string;
   scripts?: string;
 }): string {
-  const { title, bodyHtml, theme: t, head = "", scripts = "" } = opts;
+  const { title, bodyHtml, theme: t, base = "", head = "", scripts = "" } = opts;
   return `<!doctype html>
 <html lang="ru">
 <head>
@@ -23,13 +24,14 @@ export function shell(opts: {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="${FONTS}">
-<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="${base}/styles.css">
 <style>
   :root { --accent:${t.accent}; --ink:${t.ink}; --border:${t.border}; }
   body { background:${t.bg}; color:${t.ink}; font-family:${t.body}; }
   *:focus-visible { outline:2px solid ${t.accent}; outline-offset:2px; }
   @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
+<script>window.__BASE__=${JSON.stringify(base)};addEventListener("error",function(e){if(e.target&&e.target.tagName==="IMG")e.target.style.visibility="hidden"},true)</script>
 ${head}
 </head>
 <body>
