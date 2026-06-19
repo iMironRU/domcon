@@ -3,6 +3,7 @@ import { Phone, Send, MapPin, ArrowLeft, ChevronLeft, ChevronRight, X, Maximize2
 import type { RealtyObject, Realtor, Theme } from "../../schema/types";
 import type { ResolvePhoto } from "./resolvePhoto";
 import { PhotoFrame } from "./PhotoFrame";
+import { MortgageBlock } from "./MortgageBlock";
 import { fmtPrice, perM2, specRail } from "./format";
 
 interface Props {
@@ -88,6 +89,8 @@ export function ObjectPage({ o, realtor, theme: t, resolvePhoto, onBack, backHre
         ) : (
           <p style={{ color: t.muted, fontSize: 14, fontStyle: "italic" }}>Описание скоро добавим — напишите, расскажу всё об объекте.</p>
         )}
+
+        {o.mortgage && <MortgageBlock m={o.mortgage} theme={t} />}
       </div>
 
       {/* sticky CTA — под большой палец, mobile-first */}

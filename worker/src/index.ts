@@ -3,6 +3,7 @@
  * POST /publish  → проверить подпись Telegram → собрать yaml → один коммит → URL.
  * Никакого состояния диалога: его держит Mini App в браузере.
  */
+import yaml from "js-yaml";
 import { defaultTenant } from "./tenants";
 import { commitFiles } from "./github";
 
@@ -73,7 +74,11 @@ export default {
       }
     }
 
-    const yamlText = toYaml({ ...object, id, photos: photoKeys });
+    // js-yaml корректно сериализует вложенные объекты (mortgage и т.п.);
+    // sortKeys:false бережёт визуальный порядок, который привычен риелтору в diff.
+    const yamlText = yaml.dump({ ...object, id, photos: photoKeys }, {
+      lineWidth: 100, noRefs: true, sortKeys: false, skipInvalid: true,
+    });
 
     const { sha } = await commitFiles({
       token: env.GITHUB_TOKEN, owner: t.owner, repo: t.repo, branch: t.branch,
@@ -119,19 +124,6 @@ async function blobToBase64(blob: Blob): Promise<string> {
     s += String.fromCharCode(...bytes.subarray(i, i + chunk));
   }
   return btoa(s);
-}
-
-// очень простой YAML-эмиттер для плоского объекта (хватает для MVP)
-function toYaml(o: Record<string, any>): string {
-  const esc = (v: any) => typeof v === "string" && /[:#\n]/.test(v) ? JSON.stringify(v) : v;
-  const lines: string[] = [];
-  for (const [k, v] of Object.entries(o)) {
-    if (v === undefined) continue;
-    if (Array.isArray(v)) lines.push(`${k}: [${v.map(esc).join(", ")}]`);
-    else if (v === null) lines.push(`${k}: null`);
-    else lines.push(`${k}: ${esc(v)}`);
-  }
-  return lines.join("\n") + "\n";
 }
 
 /**

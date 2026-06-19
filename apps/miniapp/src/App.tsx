@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ObjectPage, makeResolvePhoto } from "@domcon/render";
-import type { RealtyObject, Realtor, Theme, ObjectType } from "../../../schema/types";
+import type { RealtyObject, Realtor, Theme, ObjectType, Mortgage } from "../../../schema/types";
 import { detectLaunch } from "./verifyLaunch";
 import { compressPhoto, type CompressedPhoto } from "./compressPhoto";
 
@@ -22,7 +22,38 @@ const WORKER_URL = import.meta.env.VITE_WORKER_URL ?? "/publish";
 
 // Состояние живёт В БРАУЗЕРЕ — worker остаётся stateless.
 // _photos — сжатые blob'ы, отправляются multipart'ом; previewUrl только для UI.
-type Draft = Partial<RealtyObject> & { _photos?: CompressedPhoto[] };
+// _m_* — плоский черновик блока ипотеки; перед отправкой собирается в mortgage.
+type Draft = Partial<RealtyObject> & {
+  _photos?: CompressedPhoto[];
+  _m_enabled?: boolean;
+  _m_promo_label?: string;
+  _m_promo_rate?: string;
+  _m_promo_note?: string;
+  _m_promo_until?: string;
+  _m_delivery?: string;
+  _m_down_payment?: string;
+  _m_opt1_term?: string; _m_opt1_monthly?: string;
+  _m_opt2_term?: string; _m_opt2_monthly?: string;
+};
+
+function buildMortgage(d: Draft): Mortgage | null {
+  if (!d._m_enabled) return null;
+  const m: Mortgage = {};
+  if (d._m_promo_label && d._m_promo_rate) {
+    m.promo = { label: d._m_promo_label, rate: d._m_promo_rate };
+    if (d._m_promo_note) m.promo.note = d._m_promo_note;
+    if (d._m_promo_until) m.promo.until = d._m_promo_until;
+  }
+  if (d._m_delivery) m.delivery = d._m_delivery;
+  if (d._m_down_payment) m.down_payment = d._m_down_payment;
+  const options = [
+    d._m_opt1_term && d._m_opt1_monthly ? { term: d._m_opt1_term, monthly: d._m_opt1_monthly } : null,
+    d._m_opt2_term && d._m_opt2_monthly ? { term: d._m_opt2_term, monthly: d._m_opt2_monthly } : null,
+  ].filter(Boolean) as { term: string; monthly: string }[];
+  if (options.length) m.options = options;
+  // если ничего не заполнено — не сохраняем пустой блок
+  return Object.keys(m).length ? m : null;
+}
 
 export function App() {
   const [d, setD] = useState<Draft>({ type: "квартира", status: "active", features: [], photos: [] });
@@ -40,6 +71,7 @@ export function App() {
     floor: d.floor ?? null, totalFloors: d.totalFloors ?? null, year: d.year ?? null,
     features: d.features ?? [], description: d.description ?? null,
     photos: (d._photos ?? []).map((p) => p.previewUrl),
+    mortgage: buildMortgage(d),
   };
 
   async function onPhotos(files: FileList | null) {
@@ -53,7 +85,8 @@ export function App() {
     try {
       const launch = detectLaunch();
       const fd = new FormData();
-      fd.set("object", JSON.stringify(stripLocal(d)));
+      const payload = { ...stripLocal(d), mortgage: buildMortgage(d) };
+      fd.set("object", JSON.stringify(payload));
       fd.set("initData", launch.initData ?? "");
       (d._photos ?? []).forEach((p, i) => {
         fd.set(`photo_${i}_full`, p.full, `${i + 1}.webp`);
@@ -103,6 +136,41 @@ export function App() {
         </Row>
         <Field label="Описание"><textarea rows={3} value={d.description ?? ""} onChange={(e) => set({ description: e.target.value })} /></Field>
         <Field label="Фото"><input type="file" accept="image/*" multiple onChange={(e) => onPhotos(e.target.files)} /></Field>
+
+        {/* ── ипотека (опционально) ──────────────────────────────────────── */}
+        <details open={!!d._m_enabled} style={{ border: `1px solid ${DEMO_THEME.border}`, borderRadius: DEMO_THEME.radius, padding: 10 }}>
+          <summary style={{ fontSize: 14, fontWeight: 600, cursor: "pointer", padding: 4 }}>
+            <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <input type="checkbox" checked={!!d._m_enabled} onChange={(e) => set({ _m_enabled: e.target.checked })} onClick={(e) => e.stopPropagation()} />
+              Блок ипотеки
+            </label>
+          </summary>
+          {d._m_enabled && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 10 }}>
+              <div style={{ fontSize: 12, color: DEMO_THEME.muted }}>Промо-предложение (опционально):</div>
+              <Row>
+                <Field label="Название (напр. «Семейная ипотека»)"><input value={d._m_promo_label ?? ""} onChange={(e) => set({ _m_promo_label: e.target.value })} /></Field>
+                <Field label="Ставка (напр. «5%»)"><input value={d._m_promo_rate ?? ""} onChange={(e) => set({ _m_promo_rate: e.target.value })} /></Field>
+              </Row>
+              <Row>
+                <Field label="Подпись («На весь срок…»)"><input value={d._m_promo_note ?? ""} onChange={(e) => set({ _m_promo_note: e.target.value })} /></Field>
+                <Field label="Действует до («30.06.2026»)"><input value={d._m_promo_until ?? ""} onChange={(e) => set({ _m_promo_until: e.target.value })} /></Field>
+              </Row>
+              <Field label="Сдача («Сдача — 4 кв. 2026»)"><input value={d._m_delivery ?? ""} onChange={(e) => set({ _m_delivery: e.target.value })} /></Field>
+              <div style={{ fontSize: 12, color: DEMO_THEME.muted, marginTop: 4 }}>Расчёт:</div>
+              <Field label="Первоначальный взнос («844 200 ₽»)"><input value={d._m_down_payment ?? ""} onChange={(e) => set({ _m_down_payment: e.target.value })} /></Field>
+              <Row>
+                <Field label="Срок 1 («30 лет»)"><input value={d._m_opt1_term ?? ""} onChange={(e) => set({ _m_opt1_term: e.target.value })} /></Field>
+                <Field label="Платёж 1 («18 015 ₽»)"><input value={d._m_opt1_monthly ?? ""} onChange={(e) => set({ _m_opt1_monthly: e.target.value })} /></Field>
+              </Row>
+              <Row>
+                <Field label="Срок 2 («20 лет»)"><input value={d._m_opt2_term ?? ""} onChange={(e) => set({ _m_opt2_term: e.target.value })} /></Field>
+                <Field label="Платёж 2 («22 147 ₽»)"><input value={d._m_opt2_monthly ?? ""} onChange={(e) => set({ _m_opt2_monthly: e.target.value })} /></Field>
+              </Row>
+            </div>
+          )}
+        </details>
+
         <button onClick={publish} disabled={sending || !d.title || !d.price}
           style={{ background: DEMO_THEME.accent, color: "#fff", border: "none", borderRadius: DEMO_THEME.radius, padding: "13px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>
           {sending ? "Отправляю…" : "Опубликовать"}
@@ -129,4 +197,8 @@ function Center({ children }: { children: React.ReactNode }) {
   return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", textAlign: "center", gap: 10, padding: 24, fontFamily: "system-ui" }}>{children}</div>;
 }
 
-function stripLocal(d: Draft) { const { _photos, ...rest } = d; return rest; }
+function stripLocal(d: Draft): Partial<RealtyObject> {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(d)) if (!k.startsWith("_")) out[k] = v;
+  return out;
+}

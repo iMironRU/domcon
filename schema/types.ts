@@ -21,7 +21,26 @@ export interface RealtyObject {
   description?: string | null;
   photos: string[]; // ключи ассетов, не URL
   created?: string | null;
+  mortgage?: Mortgage | null;
 }
+
+/**
+ * Блок ипотеки на странице объекта. Все поля — строки, заполняет риелтор
+ * в визарде, движок ничего не считает. Никаких чисел = никаких опечаток
+ * в формулах и нулевая ответственность за корректность расчёта.
+ */
+export interface Mortgage {
+  promo?: {
+    label: string;             // "Семейная ипотека"
+    rate: string;              // "5%"
+    note?: string | null;      // "На весь срок кредитования"
+    until?: string | null;     // "30.06.2026"
+  } | null;
+  down_payment?: string | null; // "844 200 ₽"
+  options?: MortgageOption[];   // ["30 лет → 18 015 ₽/мес", ...]
+  delivery?: string | null;     // "Сдача — 4 кв. 2026"
+}
+export interface MortgageOption { term: string; monthly: string; }
 
 export interface RealtorFact { k: string; v: string; }
 export interface Realtor {

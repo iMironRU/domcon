@@ -6,6 +6,7 @@ export { PhotoFrame } from "./PhotoFrame";
 export { PropertyCard } from "./PropertyCard";
 export { ObjectPage } from "./ObjectPage";
 export { Visitka } from "./Visitka";
+export { MortgageBlock } from "./MortgageBlock";
 export { fmtPrice, perM2, roomsLabel, specRail } from "./format";
 export { makeResolvePhoto } from "./resolvePhoto";
 export type { ResolvePhoto, PhotoConfig } from "./resolvePhoto";
