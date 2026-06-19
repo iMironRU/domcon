@@ -1,0 +1,16 @@
+type: квартира
+status: active
+features: []
+photos:
+  - kr-mqksf6ir/1.webp
+description: Слалал
+title: Тестттт
+price: 9999
+area: 1
+rooms: 2
+floor: 3
+totalFloors: 4
+district: Ралаьа
+street: Ататат
+mortgage: null
+id: kr-mqksf6ir
