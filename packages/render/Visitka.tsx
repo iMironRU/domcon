@@ -1,4 +1,4 @@
-import { Phone, Send, MessageCircle, UserPlus, Share2 } from "lucide-react";
+import { Phone, Send, MessageCircle, MessageSquare, UserPlus, Share2 } from "lucide-react";
 import type { Realtor, Theme } from "../../schema/types";
 import type { ResolvePhoto } from "./resolvePhoto";
 import { PhotoFrame } from "./PhotoFrame";
@@ -41,9 +41,12 @@ export function Visitka({ realtor: r, theme: t, resolvePhoto }: Props) {
           ))}
         </div>
       )}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+      {/* auto-fit: кнопки не съезжают за край при 3+ мессенджерах на узком экране */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 8 }}>
         {btn(`tel:${r.phone}`, Phone, "Звонок", false)}
         {r.telegram && btn(`https://t.me/${r.telegram}`, Send, "Telegram", true)}
+        {r.max && btn(`https://max.ru/${r.max}`, MessageCircle, "MAX", false)}
+        {r.vk && btn(`https://vk.com/${r.vk}`, MessageSquare, "ВКонтакте", false)}
         {r.whatsapp && btn(`https://wa.me/${r.whatsapp}`, MessageCircle, "WhatsApp", false)}
       </div>
       {/* vCard и share — обрабатывает share.js на статике (делегированно через data-*) */}
@@ -54,6 +57,8 @@ export function Visitka({ realtor: r, theme: t, resolvePhoto }: Props) {
           data-org="domcon"
           data-note={r.tagline ?? ""}
           data-telegram={r.telegram ?? ""}
+          data-max={r.max ?? ""}
+          data-vk={r.vk ?? ""}
           data-whatsapp={r.whatsapp ?? ""}
           style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: t.radius, padding: "10px 14px", fontSize: 14, fontWeight: 600, background: t.surface, color: t.ink, border: `1px solid ${t.border}`, cursor: "pointer" }}>
           <UserPlus size={17} /> В контакты

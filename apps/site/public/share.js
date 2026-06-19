@@ -69,6 +69,8 @@
     if (d.note) lines.push(`NOTE:${escape(d.note)}`);
     if (d.url) lines.push(`URL:${escape(d.url)}`);
     if (d.telegram) lines.push(`URL;TYPE=Telegram:${escape("https://t.me/" + d.telegram)}`);
+    if (d.max) lines.push(`URL;TYPE=MAX:${escape("https://max.ru/" + d.max)}`);
+    if (d.vk) lines.push(`URL;TYPE=VK:${escape("https://vk.com/" + d.vk)}`);
     if (d.whatsapp) lines.push(`URL;TYPE=WhatsApp:${escape("https://wa.me/" + d.whatsapp)}`);
     lines.push("END:VCARD");
     const blob = new Blob([lines.join("\r\n")], { type: "text/vcard;charset=utf-8" });

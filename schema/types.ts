@@ -47,8 +47,10 @@ export interface Realtor {
   name: string;
   tagline?: string | null;
   phone: string;
-  telegram?: string | null;
-  whatsapp?: string | null;
+  telegram?: string | null;       // username без @
+  max?: string | null;            // username/id в MAX (max.ru/<id>)
+  vk?: string | null;             // username/id во ВКонтакте (vk.com/<id>)
+  whatsapp?: string | null;       // номер без +
   photo?: string | null;
   district?: string | null;
   facts?: RealtorFact[];

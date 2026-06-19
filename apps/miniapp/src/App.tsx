@@ -9,7 +9,7 @@ import { compressPhoto, type CompressedPhoto } from "./compressPhoto";
 // Для дев-режима — заглушки; на проде worker знает tenant по подписи.
 const DEMO_REALTOR: Realtor = {
   name: "Марина Соколова", phone: "+79881234567", telegram: "marina_realty",
-  whatsapp: "79881234567", district: "Краснодар", tagline: null, photo: null, facts: [],
+  max: "marina_realty", district: "Краснодар", tagline: null, photo: null, facts: [],
 };
 const DEMO_THEME: Theme = {
   label: "Пихта", bg: "#ecefea", surface: "#ffffff", ink: "#16201a", muted: "#5c6b62",
