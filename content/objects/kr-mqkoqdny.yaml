@@ -1,0 +1,15 @@
+type: квартира
+status: active
+title: "SMOKE-2: тест с фото"
+district: Центральный
+street: ул. Тестовая, 2
+price: 6200000
+rooms: 2
+area: 48
+floor: 5
+totalFloors: 12
+features: [Ремонт, Балкон]
+description: Тестовый объект — проверка multipart-pipeline с фото. Можно удалить.
+created: 2026-06-19
+id: kr-mqkoqdny
+photos: [kr-mqkoqdny/1.webp, kr-mqkoqdny/2.webp]
