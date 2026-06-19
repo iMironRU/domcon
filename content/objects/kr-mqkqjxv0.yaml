@@ -1,0 +1,15 @@
+type: квартира
+status: active
+features: []
+photos: []
+title: Тест
+price: 111
+area: 12
+rooms: 1
+floor: 2
+totalFloors: 5
+district: '1'
+street: '1'
+description: Цысфс
+mortgage: null
+id: kr-mqkqjxv0
