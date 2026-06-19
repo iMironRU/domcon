@@ -1,0 +1,24 @@
+{
+  "name": "domcon",
+  "version": "0.1.0-beta",
+  "private": true,
+  "description": "Статичная витрина недвижимости + Mini App. Хранилище — git.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "worker"
+  ],
+  "scripts": {
+    "build": "tsx apps/site/build.ts",
+    "dev:miniapp": "npm run dev -w apps/miniapp",
+    "dev:worker": "npm run dev -w worker",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "js-yaml": "^4.1.0",
+    "@types/js-yaml": "^4.0.9"
+  }
+}

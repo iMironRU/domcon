@@ -1,0 +1,11 @@
+name: Марина Соколова
+tagline: Жильё в Краснодаре — подбор, проверка, сделка под ключ
+phone: "+79881234567"
+telegram: marina_realty
+whatsapp: "79881234567"
+photo: realtor/marina.webp        # ключ ассета (resolvePhoto)
+district: Краснодар
+facts:
+  - { k: "8 лет", v: "на рынке" }
+  - { k: "210+",  v: "сделок" }
+  - { k: "4.9",   v: "рейтинг" }

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://domcon.dev/schema/object.json",
+  "title": "RealtyObject",
+  "description": "Один объект недвижимости. Канонический источник правды.",
+  "type": "object",
+  "required": ["id", "type", "status", "title", "price"],
+  "additionalProperties": false,
+  "properties": {
+    "id":        { "type": "string", "pattern": "^[a-z0-9-]+$", "description": "Стабильный slug, = имя файла" },
+    "type":      { "enum": ["квартира", "дом", "участок", "коммерция"] },
+    "status":    { "enum": ["active", "sold"], "default": "active" },
+    "title":     { "type": "string", "minLength": 3 },
+    "district":  { "type": ["string", "null"] },
+    "street":    { "type": ["string", "null"] },
+    "price":     { "type": "integer", "minimum": 0, "description": "Рубли, целое" },
+    "rooms":     { "type": ["integer", "null"], "minimum": 0, "description": "0 = студия, null = н/п" },
+    "area":      { "type": ["number", "null"], "minimum": 0, "description": "м² (участок — тоже м²)" },
+    "floor":     { "type": ["integer", "null"], "minimum": 0 },
+    "totalFloors": { "type": ["integer", "null"], "minimum": 0 },
+    "year":      { "type": ["integer", "null"] },
+    "features":  { "type": "array", "items": { "type": "string" }, "default": [] },
+    "description": { "type": ["string", "null"] },
+    "photos":    {
+      "type": "array",
+      "items": { "type": "string", "description": "Ключ ассета, не URL. Резолвится resolvePhoto()" },
+      "default": []
+    },
+    "created":   { "type": ["string", "null"], "format": "date" }
+  }
+}

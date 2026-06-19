@@ -1,0 +1,19 @@
+{
+  "_note": "Пресеты под смену темы арендатора. Скопировать нужный в theme.json.",
+  "kobalt": {
+    "label": "Кобальт", "bg": "#f3f5fb", "surface": "#ffffff", "ink": "#0f1530",
+    "muted": "#5a6080", "accent": "#2742d8", "accentInk": "#ffffff",
+    "accentSoft": "#e6eafc", "border": "#e2e6f1", "soldBg": "rgba(15,21,48,.55)",
+    "display": "'Space Grotesk', 'Trebuchet MS', system-ui, sans-serif",
+    "body": "'Inter', system-ui, -apple-system, sans-serif",
+    "radius": 6, "unit": 16, "photoRatio": "3 / 2"
+  },
+  "stal": {
+    "label": "Сталь", "bg": "#f2f2f1", "surface": "#fbfbfa", "ink": "#1b1c1e",
+    "muted": "#6b6e73", "accent": "#3f6d72", "accentInk": "#ffffff",
+    "accentSoft": "#e7ecec", "border": "#e3e3e1", "soldBg": "rgba(27,28,30,.55)",
+    "display": "'Archivo', system-ui, sans-serif",
+    "body": "'Inter', system-ui, -apple-system, sans-serif",
+    "radius": 10, "unit": 18, "photoRatio": "1 / 1"
+  }
+}

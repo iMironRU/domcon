@@ -1,0 +1,18 @@
+{
+  "$schema": "../schema/theme.schema.json",
+  "label": "Пихта",
+  "bg": "#ecefea",
+  "surface": "#ffffff",
+  "ink": "#16201a",
+  "muted": "#5c6b62",
+  "accent": "#1f5132",
+  "accentInk": "#ffffff",
+  "accentSoft": "#e3ece5",
+  "border": "#dde2da",
+  "soldBg": "rgba(22,32,26,.55)",
+  "display": "'Fraunces', Georgia, 'Times New Roman', serif",
+  "body": "'Inter', system-ui, -apple-system, sans-serif",
+  "radius": 14,
+  "unit": 20,
+  "photoRatio": "4 / 3"
+}

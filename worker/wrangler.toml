@@ -1,0 +1,11 @@
+name = "domcon-worker"
+main = "src/index.ts"
+compatibility_date = "2026-06-01"
+
+# Секреты (wrangler secret put ...), НЕ коммитить:
+#   GITHUB_TOKEN          fine-grained PAT с доступом на запись в репо арендатора
+#   TELEGRAM_BOT_TOKEN    для проверки initData (HMAC)
+#
+# [[r2_buckets]]                 # включить, когда переедем с git на R2
+# binding = "PHOTOS"
+# bucket_name = "domcon-photos"

@@ -1,0 +1,9 @@
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+.wrap { max-width: 960px; margin: 0 auto; padding: 20px; }
+.grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+@media (min-width: 640px) { .grid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+.stack { display: flex; flex-direction: column; gap: 28px; }
+a.card:hover { transform: translateY(-3px); border-color: var(--accent) !important; }
+::-webkit-scrollbar { height: 6px; width: 6px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }

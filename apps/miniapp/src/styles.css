@@ -1,0 +1,7 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; }
+input, select, textarea {
+  width: 100%; padding: 9px 11px; font: inherit;
+  border: 1px solid #d8d8d8; border-radius: 8px; background: #fff;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid #1f5132; outline-offset: 1px; }

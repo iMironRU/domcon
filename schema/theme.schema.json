@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://domcon.dev/schema/theme.json",
+  "title": "Theme",
+  "description": "theme-as-data. Только эти значения варьируются между арендаторами.",
+  "type": "object",
+  "required": ["label", "accent", "ink", "bg", "surface", "border", "display", "body", "radius", "unit", "photoRatio"],
+  "additionalProperties": false,
+  "properties": {
+    "label":      { "type": "string" },
+    "bg":         { "type": "string", "description": "фон страницы (hex)" },
+    "surface":    { "type": "string" },
+    "ink":        { "type": "string", "description": "основной текст" },
+    "muted":      { "type": "string", "description": "вторичный текст" },
+    "accent":     { "type": "string", "description": "CTA, цена, активные состояния" },
+    "accentInk":  { "type": "string", "description": "текст на accent" },
+    "accentSoft": { "type": "string", "description": "тинт-подложка" },
+    "border":     { "type": "string" },
+    "soldBg":     { "type": "string", "description": "оверлей «Продано» (rgba)" },
+    "display":    { "type": "string", "description": "font-family заголовков" },
+    "body":       { "type": "string", "description": "font-family текста" },
+    "radius":     { "type": "number", "description": "px" },
+    "unit":       { "type": "number", "description": "базовый отступ, px (плотность)" },
+    "photoRatio": { "type": "string", "description": "CSS aspect-ratio, напр. '4 / 3'" }
+  }
+}

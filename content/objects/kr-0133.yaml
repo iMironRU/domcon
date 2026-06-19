@@ -1,0 +1,16 @@
+id: kr-0133
+type: квартира
+status: active
+title: 1-комн. в новом доме
+district: Гидрострой
+street: ул. Автолюбителей, 52
+price: 5750000
+rooms: 1
+area: 41
+floor: 9
+totalFloors: 22
+year: 2022
+features: [Ремонт, Лоджия]
+description: null      # нет описания — рендер должен деградировать мягко
+photos: [kr-0133/1.webp, kr-0133/2.webp]
+created: 2026-06-14

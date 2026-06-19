@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://domcon.dev/schema/realtor.json",
+  "title": "Realtor",
+  "type": "object",
+  "required": ["name", "phone"],
+  "additionalProperties": false,
+  "properties": {
+    "name":     { "type": "string" },
+    "tagline":  { "type": ["string", "null"] },
+    "phone":    { "type": "string", "description": "E.164, напр. +79881234567" },
+    "telegram": { "type": ["string", "null"], "description": "username без @" },
+    "whatsapp": { "type": ["string", "null"], "description": "цифры без +" },
+    "photo":    { "type": ["string", "null"], "description": "ключ ассета" },
+    "district": { "type": ["string", "null"] },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["k", "v"],
+        "properties": { "k": { "type": "string" }, "v": { "type": "string" } }
+      },
+      "default": []
+    }
+  }
+}

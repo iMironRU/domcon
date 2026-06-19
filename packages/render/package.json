@@ -1,0 +1,13 @@
+{
+  "name": "@domcon/render",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "description": "Frozen presentation: чистые компоненты для билда И превью. Без браузерных API.",
+  "peerDependencies": {
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "lucide-react": "^0.383.0"
+  }
+}
