@@ -1,0 +1,31 @@
+type: квартира
+status: active
+title: 'SMOKE-3: с блоком ипотеки'
+district: Центральный
+street: ул. Тестовая, 3
+price: 4200000
+rooms: 1
+area: 39
+floor: 2
+totalFloors: 9
+features:
+  - Кирпичный дом
+  - Сдача 4 кв 2026
+description: Smoke-объект для проверки блока ипотеки с промо-предложением.
+created: '2026-06-19'
+mortgage:
+  promo:
+    label: Семейная ипотека
+    rate: 5%
+    note: На весь срок кредитования
+    until: 30.06.2026
+  delivery: Сдача — 4 кв. 2026
+  down_payment: 844 200 ₽
+  options:
+    - term: 30 лет
+      monthly: 18 015 ₽
+    - term: 20 лет
+      monthly: 22 147 ₽
+id: kr-mqkpxirk
+photos:
+  - kr-mqkpxirk/1.webp
