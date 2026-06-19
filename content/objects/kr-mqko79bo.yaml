@@ -1,0 +1,15 @@
+type: квартира
+status: active
+title: "SMOKE TEST: 1-комн. на Красной"
+district: Центральный
+street: ул. Красная, 1
+price: 5500000
+rooms: 1
+area: 38
+floor: 4
+totalFloors: 9
+features: [Ремонт]
+description: Тестовый объект из smoke-теста worker'а. Можно удалить.
+photos: []
+created: 2026-06-19
+id: kr-mqko79bo
