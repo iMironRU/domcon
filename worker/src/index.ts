@@ -29,7 +29,13 @@ export default {
       return json({ error: "not found" }, 404);
     }
 
-    const { object, initData } = await req.json() as any;
+    // Контракт: multipart/form-data
+    //   object   = JSON {type,title,...}
+    //   initData = Telegram WebApp signed string
+    //   photo_<N>_full  / photo_<N>_thumb  = WebP Blob (0-indexed, N = 0..K-1)
+    const form = await req.formData();
+    const object = JSON.parse(String(form.get("object") ?? "{}"));
+    const initData = String(form.get("initData") ?? "");
 
     // 1. проверка подписи Telegram (HMAC-SHA256) — это и есть авторизация
     const verified = await verifyTelegram(initData, env.TELEGRAM_BOT_TOKEN);
@@ -40,14 +46,42 @@ export default {
     if (t.allowedUserIds.length && !t.allowedUserIds.includes(verified.userId)) {
       return json({ error: "user not allowed", userId: verified.userId }, 403);
     }
-    const id = object.id || nextId(object);
-    const yamlText = toYaml({ ...object, id });
 
-    // TODO(domcon): приложить фото (base64-blobs) тем же коммитом
+    const id = object.id || nextId(object);
+
+    // 3. фото: собираем пары full+thumb, генерим ключи для yaml на сервере
+    //    (клиент НЕ диктует имена — только индекс).
+    const photoFiles: { path: string; content: string; encoding: "base64" }[] = [];
+    const photoKeys: string[] = [];
+    for (let i = 0; ; i++) {
+      const full = form.get(`photo_${i}_full`);
+      if (!(full instanceof Blob)) break;
+      const thumb = form.get(`photo_${i}_thumb`);
+      const key = `${id}/${i + 1}.webp`;
+      photoKeys.push(key);
+      photoFiles.push({
+        path: `content/assets/${key}`,
+        content: await blobToBase64(full),
+        encoding: "base64",
+      });
+      if (thumb instanceof Blob) {
+        photoFiles.push({
+          path: `content/assets/${id}/${i + 1}-thumb.webp`,
+          content: await blobToBase64(thumb),
+          encoding: "base64",
+        });
+      }
+    }
+
+    const yamlText = toYaml({ ...object, id, photos: photoKeys });
+
     const { sha } = await commitFiles({
       token: env.GITHUB_TOKEN, owner: t.owner, repo: t.repo, branch: t.branch,
-      message: `object: ${id}`,
-      files: [{ path: `content/objects/${id}.yaml`, content: yamlText, encoding: "utf-8" }],
+      message: `object: ${id}${photoKeys.length ? ` (+${photoKeys.length} фото)` : ""}`,
+      files: [
+        { path: `content/objects/${id}.yaml`, content: yamlText, encoding: "utf-8" },
+        ...photoFiles,
+      ],
     });
 
     // URL детерминирован — отдаём сразу (страница появится после билда ~1–2 мин)
@@ -72,8 +106,19 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function nextId(o: any): string {
+function nextId(_o: any): string {
   return `kr-${Date.now().toString(36)}`;
+}
+
+// ArrayBuffer → base64 чанками (btoa со spread'ом падает на больших фото)
+async function blobToBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let s = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    s += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(s);
 }
 
 // очень простой YAML-эмиттер для плоского объекта (хватает для MVP)

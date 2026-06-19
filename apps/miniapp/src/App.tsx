@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ObjectPage, makeResolvePhoto } from "@domcon/render";
 import type { RealtyObject, Realtor, Theme, ObjectType } from "../../../schema/types";
 import { detectLaunch } from "./verifyLaunch";
+import { compressPhoto, type CompressedPhoto } from "./compressPhoto";
 
 // В реальности realtor+theme приходят из конфигурации арендатора (по launch).
 // Для дев-режима — заглушки; на проде worker знает tenant по подписи.
@@ -19,8 +20,9 @@ const DEMO_THEME: Theme = {
 const TYPES: ObjectType[] = ["квартира", "дом", "участок", "коммерция"];
 const WORKER_URL = import.meta.env.VITE_WORKER_URL ?? "/publish";
 
-// Шаги визарда. Состояние живёт В БРАУЗЕРЕ — worker остаётся stateless.
-type Draft = Partial<RealtyObject> & { _localPhotos?: string[] };
+// Состояние живёт В БРАУЗЕРЕ — worker остаётся stateless.
+// _photos — сжатые blob'ы, отправляются multipart'ом; previewUrl только для UI.
+type Draft = Partial<RealtyObject> & { _photos?: CompressedPhoto[] };
 
 export function App() {
   const [d, setD] = useState<Draft>({ type: "квартира", status: "active", features: [], photos: [] });
@@ -37,27 +39,27 @@ export function App() {
     price: Number(d.price) || 0, rooms: d.rooms ?? null, area: d.area ?? null,
     floor: d.floor ?? null, totalFloors: d.totalFloors ?? null, year: d.year ?? null,
     features: d.features ?? [], description: d.description ?? null,
-    photos: d._localPhotos ?? [],
+    photos: (d._photos ?? []).map((p) => p.previewUrl),
   };
 
   async function onPhotos(files: FileList | null) {
     if (!files) return;
-    // TODO(domcon): сжать на клиенте через canvas → WebP, 2 размера (thumb/full).
-    // Для превью достаточно object-URL; на отправке кладём сжатые blob'ы.
-    const urls = await Promise.all([...files].map(compressToWebpUrl));
-    set({ _localPhotos: [...(d._localPhotos ?? []), ...urls] });
+    const fresh = await Promise.all([...files].map(compressPhoto));
+    set({ _photos: [...(d._photos ?? []), ...fresh] });
   }
 
   async function publish() {
     setSending(true);
     try {
       const launch = detectLaunch();
-      // TODO(domcon): собрать FormData с сжатыми фото + JSON объекта.
-      const res = await fetch(WORKER_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ object: stripLocal(d), initData: launch.initData }),
+      const fd = new FormData();
+      fd.set("object", JSON.stringify(stripLocal(d)));
+      fd.set("initData", launch.initData ?? "");
+      (d._photos ?? []).forEach((p, i) => {
+        fd.set(`photo_${i}_full`, p.full, `${i + 1}.webp`);
+        fd.set(`photo_${i}_thumb`, p.thumb, `${i + 1}-thumb.webp`);
       });
+      const res = await fetch(WORKER_URL, { method: "POST", body: fd });
       const { url } = await res.json();
       setDoneUrl(url);
     } finally {
@@ -127,9 +129,4 @@ function Center({ children }: { children: React.ReactNode }) {
   return <div style={{ minHeight: "100vh", display: "grid", placeItems: "center", textAlign: "center", gap: 10, padding: 24, fontFamily: "system-ui" }}>{children}</div>;
 }
 
-function stripLocal(d: Draft) { const { _localPhotos, ...rest } = d; return rest; }
-
-// TODO(domcon): настоящее сжатие через canvas → toBlob('image/webp', .8), 2 размера.
-async function compressToWebpUrl(file: File): Promise<string> {
-  return URL.createObjectURL(file); // заглушка для превью
-}
+function stripLocal(d: Draft) { const { _photos, ...rest } = d; return rest; }

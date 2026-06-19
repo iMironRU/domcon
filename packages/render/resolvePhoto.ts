@@ -15,12 +15,13 @@ export interface PhotoConfig {
 
 export function makeResolvePhoto(cfg: PhotoConfig = {}) {
   const base = cfg.base ?? "/assets";
-  return function resolvePhoto(key: string, _size: PhotoSize = "full"): string {
+  return function resolvePhoto(key: string, size: PhotoSize = "full"): string {
     if (!key) return "";
     if (/^https?:\/\//.test(key)) return key; // уже абсолютный URL
-    if (cfg.r2Base) return `${cfg.r2Base.replace(/\/$/, "")}/${key}`;
-    // TODO(domcon): два размера — thumb/full — когда заведём R2/варианты
-    return `${base.replace(/\/$/, "")}/${key}`;
+    // В yaml лежит full-ключ ("kr-0142/1.webp"); thumb выводится суффиксом ("...-thumb.webp").
+    const finalKey = size === "thumb" ? key.replace(/\.([^.]+)$/, "-thumb.$1") : key;
+    if (cfg.r2Base) return `${cfg.r2Base.replace(/\/$/, "")}/${finalKey}`;
+    return `${base.replace(/\/$/, "")}/${finalKey}`;
   };
 }
 

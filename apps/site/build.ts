@@ -95,9 +95,9 @@ writeFileSync(join(DIST, "objects.json"), JSON.stringify(
 ));
 cpSync(join(import.meta.dirname ?? dirname(fileURLToPath(import.meta.url)), "public"), DIST, { recursive: true });
 
-// TODO(domcon): копировать реальные фото:
-//   const ASSETS = join(CONTENT, "assets");
-//   if (existsSync(ASSETS)) cpSync(ASSETS, join(DIST, "assets"), { recursive: true });
+// ── ассеты (фото объектов) — git-режим: content/assets → dist/assets ────────
+const ASSETS = join(CONTENT, "assets");
+if (existsSync(ASSETS)) cpSync(ASSETS, join(DIST, "assets"), { recursive: true });
 
 function fmtTitlePrice(n: number) { return new Intl.NumberFormat("ru-RU").format(n) + " ₽"; }
 
