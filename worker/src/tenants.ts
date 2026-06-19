@@ -16,9 +16,9 @@ export const TENANTS: Record<string, Tenant> = {
   marina: {
     id: "marina",
     owner: "iMironRU",
-    repo: "domcon-marina",
+    repo: "domcon",
     branch: "main",
-    allowedUserIds: [], // TODO(domcon): вписать Telegram id риелтора (lock!)
+    allowedUserIds: [151112153],
     botTokenSecret: "TELEGRAM_BOT_TOKEN",
   },
 };

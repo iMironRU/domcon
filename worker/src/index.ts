@@ -14,6 +14,17 @@ interface Env {
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+
+    // CORS preflight (Mini App ходит с другого origin)
+    if (req.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
+    // smoke test: GET /health → { ok: true, tenant: "marina" }
+    if (req.method === "GET" && url.pathname === "/health") {
+      return json({ ok: true, tenant: defaultTenant.id, repo: `${defaultTenant.owner}/${defaultTenant.repo}` });
+    }
+
     if (req.method !== "POST" || url.pathname !== "/publish") {
       return json({ error: "not found" }, 404);
     }
@@ -21,12 +32,14 @@ export default {
     const { object, initData } = await req.json() as any;
 
     // 1. проверка подписи Telegram (HMAC-SHA256) — это и есть авторизация
-    const ok = await verifyTelegram(initData, env.TELEGRAM_BOT_TOKEN);
-    if (!ok) return json({ error: "bad signature" }, 401);
+    const verified = await verifyTelegram(initData, env.TELEGRAM_BOT_TOKEN);
+    if (!verified) return json({ error: "bad signature" }, 401);
 
-    // TODO(domcon): проверить user id из initData ∈ tenant.allowedUserIds (lock)
-
+    // 2. lock: user из initData должен быть в tenant.allowedUserIds
     const t = defaultTenant;
+    if (t.allowedUserIds.length && !t.allowedUserIds.includes(verified.userId)) {
+      return json({ error: "user not allowed", userId: verified.userId }, 403);
+    }
     const id = object.id || nextId(object);
     const yamlText = toYaml({ ...object, id });
 
@@ -43,8 +56,20 @@ export default {
   },
 };
 
+function corsHeaders(): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400",
+  };
+}
+
 function json(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders() },
+  });
 }
 
 function nextId(o: any): string {
@@ -68,17 +93,25 @@ function toYaml(o: Record<string, any>): string {
  * Проверка Telegram WebApp initData по схеме HMAC-SHA256.
  * secret_key = HMAC_SHA256("WebAppData", bot_token); hash = HMAC_SHA256(secret, data_check_string)
  */
-async function verifyTelegram(initData: string, botToken: string): Promise<boolean> {
-  if (!initData) return false;
+async function verifyTelegram(initData: string, botToken: string): Promise<{ userId: number } | null> {
+  if (!initData) return null;
   const p = new URLSearchParams(initData);
   const hash = p.get("hash"); p.delete("hash");
-  if (!hash) return false;
+  if (!hash) return null;
   const dcs = [...p.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join("\n");
 
   const enc = new TextEncoder();
   const secret = await hmac(enc.encode("WebAppData"), enc.encode(botToken));
   const sig = await hmac(secret, enc.encode(dcs));
-  return toHex(sig) === hash;
+  if (toHex(sig) !== hash) return null;
+
+  try {
+    const user = JSON.parse(p.get("user") ?? "{}");
+    if (typeof user.id !== "number") return null;
+    return { userId: user.id };
+  } catch {
+    return null;
+  }
 }
 
 async function hmac(key: ArrayBuffer | Uint8Array, msg: Uint8Array): Promise<ArrayBuffer> {

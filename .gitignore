@@ -6,3 +6,6 @@ dist/
 .DS_Store
 *.log
 dist/
+
+# local smoke tests (run via env vars, do not commit token state)
+.smoke-test.mjs
