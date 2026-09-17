@@ -5,6 +5,19 @@ const FONTS =
   "&family=Fraunces:opsz,wght@9..144,500;9..144,600" +
   "&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap";
 
+// Счётчик Яндекс.Метрики: сайт публикуется как imiron.ru/domcon/, раздел того же домена.
+const METRIKA = `<!-- Yandex.Metrika counter -->
+<script type="text/javascript">
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+m[i].l=1*new Date();
+for (var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+})(window,document,'script','https://mc.yandex.ru/metrika/tag.js?id=95360763','ym');
+ym(95360763,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true});
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/95360763" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- /Yandex.Metrika counter -->`;
+
 /** HTML-оболочка. Публичная страница = чистая разметка + минимум ванили. */
 export function shell(opts: {
   title: string;
@@ -32,6 +45,7 @@ export function shell(opts: {
   @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 <script>window.__BASE__=${JSON.stringify(base)};addEventListener("error",function(e){if(e.target&&e.target.tagName==="IMG")e.target.style.visibility="hidden"},true)</script>
+${METRIKA}
 ${head}
 </head>
 <body>
